@@ -3,7 +3,7 @@
 	"name": "Vimium O",
 	"version": "2026.02.14",
 	"minAppVersion": "1.11.7",
-	"description": "Vimium commands, ported to Obsidian.",
+	"description": "Adds Vimium-style keyboard navigation to your notes.",
 	"author": "sq1000000",
 	"isDesktopOnly": false 
 }
