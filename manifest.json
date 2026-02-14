@@ -1,0 +1,9 @@
+{
+	"id": "vimium-o",
+	"name": "Vimium O",
+	"version": "2026.02.14",
+	"minAppVersion": "1.11.7",
+	"description": "Vimium commands, ported to Obsidian.",
+	"author": "sq1000000",
+	"isDesktopOnly": false 
+}

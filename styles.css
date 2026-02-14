@@ -1,0 +1,300 @@
+/* ================================================================= */
+/* Styles for Vimium Help UI                                         */
+/* ================================================================= */
+
+/* Main Help Modal Container */
+.vimium-help-modal {
+  padding: 0 !important;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 13px;
+}
+
+/* Grid Layout for Help Sections */
+.vimium-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  padding: 0px 20px;
+  overflow-y: auto;
+  background: var(--background-primary);
+  flex-grow: 1;
+}
+
+/* Table Styling for Hotkey Lists */
+.vimium-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.vimium-table td {
+  padding: 3px 0;
+  vertical-align: top;
+  border: none;
+  background: transparent !important;
+}
+
+/* Description Text within Help Table */
+.vimium-desc {
+  color: var(--text-normal); 
+  line-height: 20px;
+  padding-left: 3px !important; 
+}
+
+/* Container for Key Badges */
+.vimium-keys {
+  text-align: right;
+  padding-right: 15px;
+  white-space: nowrap;
+  width: 1%;
+}
+
+/* Visual styling for individual keys */
+.vimium-key {
+  display: inline-block;
+  background: var(--background-secondary) !important;
+  border: 1px solid var(--background-modifier-border);
+  box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+  border-radius: 3px; padding: 0px 5px; margin: 0 2px;
+  font-family: monospace; font-size: 12px; color: var(--text-normal);
+  font-weight: 600; line-height: 16px; min-width: 18px; text-align: center;
+}
+
+/* Link Hints */
+#vimium-hint-container {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 9999; pointer-events: none;
+}
+.vimium-hint {
+  position: absolute;
+  background-color: rgba(255, 216, 102, 0.80);
+  color: #2d2a2e; font-weight: bold; font-size: 12px;
+  padding: 2px 4px;
+  border: 1px solid #727072; border-radius: 3px; z-index: 10000;
+}
+
+/* Highlighted characters within a hint (matched input) */
+.vimium-match {
+  color: #d94848;
+}
+
+/* ================================================================= */
+/* Styles for Vimium Search UI                                       */
+/* ================================================================= */
+
+/* Inactive Match (Yellow) */
+body.vimium-search-active .markdown-rendered .search-highlight > div {
+  background-color: rgba(255, 215, 0);
+  box-shadow: none;
+  box-sizing: content-box;
+  border-top: 3px solid rgba(255, 215, 0);
+  border-bottom: 3px solid rgba(255, 215, 0);
+  border-left: 0;
+  border-right: 0;
+  margin-top: -3px;
+  border-radius: 4px; 
+  mix-blend-mode: var(--highlight-mix-blend-mode);
+  opacity: 1;
+  pointer-events: none;
+}
+
+/* Active Match (Orange) */
+body.vimium-search-active .markdown-rendered .search-highlight > div.is-active {
+  background-color: rgba(255, 157, 0);
+  border-top: 5px solid rgba(255, 157, 0);
+  border-bottom: 4px solid rgba(255, 157, 0);
+  margin-top: -5px;
+}
+
+/* Vimium search HUD styling */
+#vimium-search-hud.vimium-search-hud {
+  position: fixed;
+  bottom: 5%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  z-index: 99999;
+  background-color: var(--modal-background);
+  border: 1px solid var(--modal-border);
+  border-radius: 8px;
+  padding: 10px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* The match counter (like 1/5) inside the Vimium search HUD */
+#vimium-search-hud .vimium-count {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 40px;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  font-size: 16px;
+  letter-spacing: 0.2px; /* Adds a bit of clarity to the smaller text */
+}
+
+/* The '/' divider in the Vimium search HUD */
+#vimium-search-hud .vimium-search-divider {
+  color: var(--text-accent);
+  font-weight: bold;
+  user-select: none;
+  pointer-events: none;
+  margin: 0 4px; 
+  
+  display: inline-flex;
+  align-items: center;
+  align-self: stretch; 
+  font-size: 18px;
+}
+
+/* The number input box in the Vimium search HUD */
+#vimium-search-hud .vimium-search-input {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-normal);
+  font-size: 18px;
+  flex: 1;
+  width: 200px;
+}
+
+/* Removes the native search box input while using the vimium search function */
+body.vimium-search-active .document-search-container,
+body.vimium-search-active .pdf-findbar {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    top: -10000px !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
+/* The flashed text after jumping to edit mode from search mode*/
+.vimium-flash {
+  position: fixed;
+  box-sizing: border-box; 
+  background-color: rgba(255, 157, 0); 
+  border-top: 20px solid rgba(255, 157, 0) !important;
+  border-bottom: 20px solid rgba(255, 157, 0) !important;
+  border-radius: 4px;
+  mix-blend-mode: multiply; 
+  transform-origin: left center; 
+  will-change: transform;
+  
+  animation: 
+    vimium-sit-there 1s linear forwards, 
+    vimium-slide 0.5s linear 1s forwards;
+}
+
+@keyframes vimium-sit-there {
+  0%, 100% { 
+    transform: translateY(-50%) scaleX(1); 
+  }
+}
+
+@keyframes vimium-slide {
+  0% { 
+    transform: translateY(-50%) scaleX(1); 
+  }
+  100% {
+    transform: translateY(-50%) scaleX(0.001);
+  }
+}
+
+/* ================================================================= */
+/* Styles for Vimium Marks                                           */
+/* ================================================================= */
+
+/* The container overlaying the scrollbar area */
+.vimium-marks-container {
+  position: absolute;
+  top: 40px;
+  bottom: 40px;
+  right: 0;
+  width: 15px;
+  pointer-events: none; /* Let clicks pass through empty space */
+  z-index: 900;
+  overflow: visible;
+}
+
+/* The individual tick mark (The Red Line) */
+.vimium-mark-tick {
+  position: absolute;
+  right: 0;
+  width: 100%;
+  height: 2px;
+  background-color: rgba(255, 69, 58, 0.9); /* Bright visible red */
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+  z-index: 901;
+  transform: translateY(-50%);
+  pointer-events: auto;
+  cursor: pointer;
+  transition: background-color 0.1s, height 0.1s;
+}
+
+/* The Label (The Letter) */
+.vimium-mark-tick::after {
+  content: attr(data-label);
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: bold;
+  color: var(--text-normal);
+  background-color: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.25);
+  padding: 1px 4px;
+  border-radius: 3px;
+  z-index: 902;
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* Hover Effect */
+.vimium-mark-tick:hover {
+  background-color: var(--interactive-accent);
+  height: 4px; /* Thicker on hover to make clicking easier */
+}
+
+.vimium-mark-tick:hover::after {
+  color: var(--text-on-accent);
+  background-color: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+}
+
+/* Make the suggestion item a flex container to align text and button */
+.vimium-mark-modal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+/* The Delete (X) Button */
+.vimium-mark-delete-btn {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  border-radius: var(--button-radius-medium);
+  padding: 4px 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+.vimium-mark-delete-btn:hover {
+  color: var(--text-error);
+}
