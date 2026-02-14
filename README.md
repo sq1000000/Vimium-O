@@ -23,6 +23,12 @@ This is not to be confused with ['Vim key bindings'](https://publish.obsidian.md
 5. Select the "Enable" box.
 6. Restart Obsidian.
 
+## Installation (Without Obsidian Plugin Repository)
+1. Download the latest zip from [Releases](https://github.com/sq1000000/Vimium-O/releases).
+2. Extract the zip into `vault/.obsidian/plugins/`.
+3. In Obsidian, click the search bar in `Settings/Community Plugins`, and search for "Vimium O".
+4. Toggle the extension on.
+
 ## Keyboard Bindings
 You can view the full list of key bindings at any time within Obsidian by pressing `?`.
 
@@ -125,5 +131,6 @@ If there's something you don't particularly like about this extension. That's al
 
 ## Credits
 - [philc](https://github.com/philc) for the [Vimium](https://github.com/philc/vimium) browser extension that I took the keybindings from.
+
 
 - [LukasKorotaj ](https://github.com/LukasKorotaj) for the [extension](https://github.com/LukasKorotaj/Scroll-With-j-k-in-Obsidian) that this was originally built off of.
