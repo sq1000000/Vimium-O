@@ -1,7 +1,7 @@
 {
 	"id": "vimium-o",
 	"name": "Vimium O",
-	"version": "2026.02.14",
+	"version": "2026.02.14.1",
 	"minAppVersion": "1.11.7",
 	"description": "Adds Vimium-style keyboard navigation to your notes.",
 	"author": "sq1000000",
