@@ -12,10 +12,9 @@ const DEFAULT_SETTINGS = {
 
 // Defines every UI button clickable with "F to select element"
 const CLICKABLE_SELECTORS = [
-    "a", "button", "input", "[role='button']", ".clickable", ".clickable-icon",
-    ".tree-item-self", ".workspace-tab-header", ".nav-file-title", ".nav-folder-title",
-    ".hyperlink", ".tag", ".cm-hashtag", ".cm-url", ".external-link", ".internal-link",
-    ".bases-cards-item", ".text-icon-button", ".menu-item", ".view-header-breadcrumb", ".view-header-title", ".callout-fold"
+    "a", "button", "input", "[role='button']", ".clickable", ".clickable-icon", ".tree-item-self", ".workspace-tab-header", ".nav-file-title", 
+    ".nav-folder-title", ".hyperlink", ".tag", ".cm-hashtag", ".cm-url", ".external-link", ".internal-link", ".bases-cards-item", ".text-icon-button",
+    ".menu-item", ".view-header-breadcrumb", ".view-header-title", ".callout-fold", ".empty-state-action", ".titlebar-button", ".workspace-tabs.mod-stacked .workspace-tab-header-inner"
 ].join(", ");
 
 // Defines every keyboard character usable with "F to select element"
@@ -50,11 +49,14 @@ function smoothScrollTo(el, targetValue, isPercentage = false, axis = 'y') {
     const maxProp = axis === 'x' ? 'scrollWidth' : 'scrollHeight';
     const clientProp = axis === 'x' ? 'clientWidth' : 'clientHeight';
     
-    let targetPixel = targetValue;
-    if (isPercentage) {
+    // Helper to calculate the target pixel, allowing dynamic updates
+    const getTargetPixel = () => {
+        if (!isPercentage) return targetValue;
         const maxScroll = el[maxProp] - el[clientProp];
-        targetPixel = maxScroll * targetValue;
-    }
+        return maxScroll * targetValue;
+    };
+
+    let targetPixel = getTargetPixel();
 
     // Initial attempt
     el.scrollTo({ [axis === 'x' ? 'left' : 'top']: targetPixel, behavior: 'smooth' });
@@ -68,6 +70,9 @@ function smoothScrollTo(el, targetValue, isPercentage = false, axis = 'y') {
 
         const currentPos = el[prop];
         
+        // Recalculate target if it's a percentage (handles lazy-loading/growing content)
+        if (isPercentage) targetPixel = getTargetPixel();
+
         // Stop if we are close enough (within 5px)
         if (Math.abs(currentPos - targetPixel) < 5) { clearInterval(interval); return; }
 
@@ -89,7 +94,7 @@ class MarkSearchModal extends FuzzySuggestModal {
         this.setPlaceholder("Search for mark...");
     }
 
-    // format mark data for the fuzzy finder
+    // Format mark data for the fuzzy finder
     getItems() {
         return Object.entries(this.plugin.markManager.marks).map(([key, data]) => ({
             key, ...data
@@ -690,7 +695,7 @@ class VimiumLogic {
                     width: `${width}px`, height: `${height}px`
                 });
                 doc.body.appendChild(flashEl);
-                setTimeout(() => flashEl.remove(), 10000);
+                setTimeout(() => flashEl.remove(), 3000); 
             }
         }, 20);
     }
@@ -716,11 +721,16 @@ class VimiumLogic {
         
         if (this.hintManager.isActive()) {
             this.hintManager.handleKey(event.key);
-            event.preventDefault(); event.stopPropagation(); return;
+            event.preventDefault(); 
+            event.stopImmediatePropagation(); // Prevents FindLogic from running
+            return;
         }
 
         if (this.markManager.isActive()) {
-            if (this.markManager.handleKey(event)) { event.preventDefault(); event.stopPropagation(); }
+            if (this.markManager.handleKey(event)) { 
+                event.preventDefault(); 
+                event.stopImmediatePropagation(); // Prevents FindLogic from running
+            }
             return;
         }
 
@@ -733,23 +743,42 @@ class VimiumLogic {
         const lowerKey = key.toLowerCase();
         const { ctrlKey: isCtrl, shiftKey: isShift, altKey: isAlt, metaKey: isMeta } = event;
 
+        // Bail out early if we shouldn't handle keys (e.g., actively typing in an editor)
+        // EXCEPT for the Escape key, which we need to evaluate for Vim Normal mode transitions.
+        const active = doc.activeElement;
+        
+        // Ignore inputs/textareas that are part of the CodeMirror editor
+        const isStandardInput = active && ["INPUT", "TEXTAREA"].includes(active.tagName) && !active.closest(".cm-editor");
+
+        // Bail out early if we shouldn't handle keys, blocking Escape only if we are in a standard input
+        if (!isHelpMode && !this.shouldHandleKeys(doc) && (key !== "Escape" || isStandardInput)) {
+            return;
+        }
+
         if (key === "Escape") {
             if (isHelpMode) return; 
+            
             const view = this.app.workspace.getActiveViewOfType(MarkdownView);
             if (view?.getMode() === "source") {
-                this.app.commands.executeCommandById("markdown:toggle-preview");
-                event.preventDefault(); 
+                const isVimEnabled = this.app.vault.getConfig("vimMode");
+                const isNormalMode = view.contentEl.querySelector(".cm-fat-cursor");
+
+                // If Vim is OFF, ALWAYS exit to preview.
+                // If Vim is ON, clear visual selections in Normal mode instead.
+                if (!isVimEnabled || (isNormalMode && !view.editor?.somethingSelected())) {
+                    event.preventDefault(); 
+                    event.stopPropagation();
+                    this.app.commands.executeCommandById("markdown:toggle-preview");
+                }
             }
             return;
         }
         
         // 'f' -> Link Hints
-        if (lowerKey === "f" && !isCtrl && !isAlt && !isMeta && !isHelpMode && this.shouldHandleKeys(doc)) {
+        if (lowerKey === "f" && !isCtrl && !isAlt && !isMeta && !isHelpMode) {
             this.hintManager.start(isShift, doc); 
             event.preventDefault(); return;
         }
-
-        if (!isHelpMode && !this.shouldHandleKeys(doc)) return;
 
         // --- BUFFER SEQUENCES ---
 
@@ -839,8 +868,9 @@ class VimiumLogic {
             
             // Bookmarks
             if (lowerKey === "b") {
-                const modal = new BookmarkSearchModal(this.plugin.app, isShift, isShift ? this.app.workspace.activeLeaf : null);
+                const originLeaf = isShift ? this.app.workspace.activeLeaf : null;
                 if (isShift) this.app.commands.executeCommandById("workspace:new-tab");
+                const modal = new BookmarkSearchModal(this.plugin.app, isShift, originLeaf);
                 modal.open();
                 event.preventDefault(); return;
             }
@@ -856,7 +886,7 @@ class VimiumLogic {
                         const modal = target?.view?.contentEl?.ownerDocument.querySelector('.modal-container .prompt');
                         if (modal) {
                             const timer = setInterval(() => {
-                                if (!modal.closest('.modal-container').isConnected) {
+                                if (!modal.isConnected) {
                                     clearInterval(timer);
                                     if (target.view.getViewType() === "empty") {
                                         target.detach();
@@ -935,112 +965,81 @@ class VimiumLogic {
 
         if (lowerKey === "i" && !isCtrl && !isAlt && !isMeta && !isShift && !isHelpMode) {
             let view = this.app.workspace.getActiveViewOfType(MarkdownView);
-            // Fallback for sticky
-            if (!view) this.app.workspace.iterateRootLeaves(l => { if (!view && l.view instanceof MarkdownView) view = l.view; });
+
             
             if (view?.getMode() === "preview") {
                 event.preventDefault(); event.stopPropagation();
 
-                // Check if Search HUD is NOT active
-                if (!this.plugin.findLogic || !this.plugin.findLogic.searchHud) {
-                    this.app.commands.executeCommandById("markdown:toggle-preview");
-
-                    // Wait for the editor to render and force focus
-                    let attempts = 0;
-                    const focusInterval = setInterval(() => {
-                        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-                        // Stop checking if we found the editor in source mode
-                        if (activeView && activeView.getMode() === 'source' && activeView.editor) {
-                             activeView.editor.focus();
-                             clearInterval(focusInterval);
-                        }
-                        // Give up after ~400ms to prevent infinite loops
-                        if (++attempts > 20) clearInterval(focusInterval);
-                    }, 20);
-                    return;
-                }
-                // ------------------------------------------------
-
-                // 1.0 GATHER SEARCH DATA (Safely)
+                // 1.0 Gather search data (If HUD is active)
                 let searchQuery = "";
                 let targetIndex = 0;
                 let nativeLine = null;
+                const find = this.plugin.findLogic;
 
-                try {
-                    nativeLine = this.getLineOfActiveMatch(view);
-                    const find = this.plugin.findLogic;
-
-                    if (find) {
+                if (find && find.searchHud) {
+                    try {
+                        nativeLine = this.getLineOfActiveMatch(view);
+                        
                         // 1.1 Try to get query from active HUD first
                         if (find.inputEl && find.inputEl.value) searchQuery = find.inputEl.value;
                         
-                        // 1.2 Fallback to cache for this file
-                        else if (view.file?.path) searchQuery = find.searchCache[view.file.path] || "";
-
-                        // 1.3 Try to get the index (1/5) from HUD
+                        // 1.2 Try to get the index (1/5) from HUD
                         if (find.countEl) {
                             const parts = find.countEl.innerText?.split('/');
                             if (parts?.length) targetIndex = parseInt(parts[0].trim(), 10) - 1;
                         }
                         
                         find.closeSearchHud();
+                    } catch (e) {
+                        console.log("Vimium: Error gathering search data", e);
                     }
-                } catch (e) {
-                    console.log("Vimium: Error gathering search data, proceeding to toggle.", e);
                 }
 
-                // 2.0 EXECUTE TOGGLE
-                this.app.commands.executeCommandById("markdown:toggle-preview");
+                // 2.0 Unified toggle
+                const leaf = view.leaf;
+                const viewState = leaf.getViewState();
+                viewState.state.mode = 'source';
+                await leaf.setViewState(viewState);
 
-                // 3.0 ATTEMPT JUMP (Only if we have data)
-                if (!searchQuery && nativeLine === null) return;
+                // Re-fetch view to ensure we have the editor after state change
+                const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+                if (!activeView || !activeView.editor) return;
+                
+                const editor = activeView.editor;
+                editor.focus();
 
-                let attempts = 0;
-                const waitForEditor = setInterval(() => {
-                    view = this.app.workspace.getActiveViewOfType(MarkdownView);
-                    if (++attempts > 125) { clearInterval(waitForEditor); return; }
+                // 3.0 Attempt jump (Only if we have data)
+                if (!searchQuery && nativeLine === null) {
+                    if (window.CodeMirror?.Vim) window.CodeMirror.Vim.handleKey(editor.cm, 'i', 'user');
+                    return;
+                }
 
-                    if (view?.editor) {
-                        clearInterval(waitForEditor);
-                        const editor = view.editor;
-                        editor.focus();
-                        
-                        if (targetIndex < 0) targetIndex = 0;
-                        let found = false;
+                if (targetIndex < 0) targetIndex = 0;
+                let found = false;
 
-                        // Regex Strategy
-                        if (searchQuery) {
-                            const regex = new RegExp(escapeRegExp(searchQuery), "gi");
-                            const content = this.getSearchableContent(editor.getValue());
-                            let match, count = 0;
-                            while ((match = regex.exec(content)) !== null) {
-                                if (count === targetIndex) {
-                                    const pos = editor.offsetToPos(match.index);
-                                    editor.setCursor(pos);
-                                    editor.scrollIntoView({ from: pos, to: pos }, true);
-                                    this.triggerFlash(editor.cm, match.index, searchQuery.length, view.contentEl.ownerDocument);
-                                    found = true;
-                                    break;
-                                }
-                                count++;
-                            }
-                        }
-
-                        // Native Line Strategy (Fallback)
-                        if (!found && nativeLine !== null) {
-                            const lineText = editor.getLine(nativeLine);
-                            let ch = 0;
-                            if (searchQuery) {
-                                const m = (new RegExp(escapeRegExp(searchQuery), "i")).exec(lineText);
-                                if (m) ch = m.index;
-                            }
-                            const pos = { line: nativeLine, ch };
+                // Regex Strategy
+                if (searchQuery) {
+                    const regex = new RegExp(escapeRegExp(searchQuery), "gi");
+                    const content = this.getSearchableContent(editor.getValue());
+                    let match, count = 0;
+                    while ((match = regex.exec(content)) !== null) {
+                        if (count === targetIndex) {
+                            const pos = editor.offsetToPos(match.index);
                             editor.setCursor(pos);
                             editor.scrollIntoView({ from: pos, to: pos }, true);
-                            this.triggerFlash(editor.cm, editor.posToOffset(pos), searchQuery.length || 5, view.contentEl.ownerDocument);
+                            
+                            // passing activeView instead of the stale view
+                            this.triggerFlash(editor.cm, match.index, searchQuery.length, activeView.contentEl.ownerDocument);
+                            found = true;
+                            break;
                         }
+                        count++;
                     }
-                }, 20);
+                }
+
+                // Drop into Insert Mode
+                if (window.CodeMirror?.Vim) window.CodeMirror.Vim.handleKey(editor.cm, 'i', 'user');
+                
                 return;
             }
         }
@@ -1059,37 +1058,25 @@ class VimiumLogic {
         console.log(`Vimium: moveTab requested direction ${direction}`);
     }
 
-    // Jump to next or previous heading in markdown file
+    // Jump to previous or next heading in markdown file
     navigateToHeading(direction) {
         const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-        if (!view?.file) return;
-        const cache = this.app.metadataCache.getFileCache(view.file);
-        if (!cache?.headings?.length) { new Notice("No headings found."); return; }
+        const headings = view?.file ? this.app.metadataCache.getFileCache(view.file)?.headings : null;
+        if (!headings?.length) return new Notice("No headings found");
 
-        const scrollTop = view.previewMode.containerEl.querySelector(".markdown-preview-view").scrollTop;
-        const renderer = view.previewMode.renderer;
-        let currentLine = 0;
+        const isSrc = view.getMode() === "source";
+        const curLine = isSrc ? view.editor.getCursor().line : (view.currentMode.getScroll?.() || 0);
         
-        if (renderer?.sections) {
-            for (const section of renderer.sections) {
-                if (section.el.offsetTop >= scrollTop) { currentLine = section.lineStart; break; }
-                currentLine = section.lineStart;
-            }
-        }
+        const target = direction > 0 
+            ? headings.find(h => h.position.start.line > curLine + 2) || headings[headings.length - 1]
+            : headings.slice().reverse().find(h => h.position.start.line < curLine - 2) || headings[0];
 
-        const headings = cache.headings;
-        let target = null;
-        if (direction > 0) {
-            target = headings.find(h => h.position.start.line > currentLine) || headings[headings.length - 1];
+        const line = target.position.start.line;
+        if (isSrc) {
+            view.editor.setCursor(line, 0);
+            view.editor.scrollIntoView({ from: { line, ch: 0 }, to: { line, ch: 0 } });
         } else {
-            for (let i = headings.length - 1; i >= 0; i--) {
-                if (headings[i].position.start.line < currentLine) { target = headings[i]; break; }
-            }
-            target = target || headings[0];
-        }
-        if (target) {
-            view.setEphemeralState({ line: target.position.start.line });
-            new Notice(`Jumped to: ${target.heading}`);
+            view.setEphemeralState({ line });
         }
     }
 
@@ -1201,11 +1188,11 @@ module.exports = class VimiumRead extends Plugin {
   async saveSettings() {
     await this.saveData(this.settings);
   }
+
   // Cleanup resources when plugin is disabled
   onunload() {
     this.logic?.hintManager?.stop(); this.findLogic?.closeSearchHud();
-    // Allow clean reattachment after reload
-    this._docsWithListeners = new WeakSet();
+    this._docsWithListeners = new WeakSet(); // Allow clean reattachment after reload
   }
 };
 
@@ -1264,6 +1251,9 @@ class FindLogic {
 
     // Intercept keys for search functionality
     handleKeyDown(event) {
+        // If VimiumLogic already grabbed this key, ignore it completely
+        if (event.defaultPrevented) return;
+
         const doc = event.target.ownerDocument || document;
         if (doc.querySelector(".modal") || !this.getSearchableView()) return;
 
@@ -1284,6 +1274,17 @@ class FindLogic {
             event.preventDefault(); event.stopPropagation();
             this.openSearchHud();
             return;
+        }
+
+        // Check for 'n' or 'N' when the HUD is closed
+        if ((key === "n" || key === "N") && !event.ctrlKey && !event.altKey && !event.metaKey) {
+            // If the search HUD is not active, immediately notify the user
+            if (!this.searchHud) {
+                new Notice("No query to find");
+                event.preventDefault(); 
+                event.stopPropagation();
+                return;
+            }
         }
 
         if (this.searchHud) {
@@ -1471,10 +1472,7 @@ class FindLogic {
             this.searchHud.remove();
             this.searchHud = null;
             this.observer?.disconnect();
-            
-            // Just close the native button to ensure it resets properly
-            this.nativeUI.closeBtn?.click();
-
+            this.nativeUI.closeBtn?.click(); // Just close the native button to ensure it resets properly
             this.nativeUI = {};
             this.getSearchableView()?.contentEl?.focus();
         }

@@ -3,7 +3,7 @@ name: Release on Manifest Update
 on:
   push:
     paths:
-      - 'manifest.json' # Triggers only when you edit this file
+      - 'manifest.json'
 
 jobs:
   release:
