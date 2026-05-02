@@ -2,7 +2,7 @@
 
 [Vimium](https://github.com/philc/vimium) commands, ported to Obsidian.
 
-![GitHub Repo stars](https://img.shields.io/github/stars/sq1000000/Vimium-O?color=%23eac54f&style=flat-square) ![GitHub issues](https://img.shields.io/github/issues/sq1000000/Vimium-O?color=%232da44e&style=flat-square) ![GitHub closed issues](https://img.shields.io/github/issues-closed/sq1000000/Vimium-O?color=%238250df&style=flat-square)
+![GitHub Repo stars](https://img.shields.io/github/stars/sata1000000/Vimium-O?color=%23eac54f&style=flat-square) ![GitHub issues](https://img.shields.io/github/issues/sata1000000/Vimium-O?color=%232da44e&style=flat-square) ![GitHub closed issues](https://img.shields.io/github/issues-closed/sata1000000/Vimium-O?color=%238250df&style=flat-square)
 
 This plugin for Obsidian brings [Vimium-style navigation](https://github.com/philc/vimium) to Obsidian Reading View. This allows the user to navigate Obsidian almost entirely without needing a mouse.
 
@@ -24,7 +24,7 @@ This is not to be confused with ['Vim key bindings'](https://publish.obsidian.md
 6. Restart Obsidian.
 
 ## Installation (Without Obsidian Plugin Repository)
-1. Download the latest zip from [Releases](https://github.com/sq1000000/Vimium-O/releases).
+1. Download the latest zip from [Releases](https://github.com/sata1000000/Vimium-O/releases).
 2. Extract the zip into `vault/.obsidian/plugins/`.
 3. In Obsidian, click the search bar in `Settings/Community Plugins`, and search for "Vimium O".
 4. Toggle the extension on.
@@ -127,7 +127,7 @@ gs      Open current file in default app
 - Implement command repetition. For example, typing `5t` will open 5 tabs.
 
 ## Contribute
-If there's something you don't particularly like about this extension. That's alright. Fix it yourself with a [pull request](https://github.com/sq1000000/Vimium-Read/pulls), or beg [sq1000000](https://github.com/sq1000000) to fix the the issue in [issues](https://github.com/sq1000000/Vimium-Read/issues).
+If there's something you don't particularly like about this extension. That's alright. Fix it yourself with a [pull request](https://github.com/sata1000000/Vimium-Read/pulls), or beg [sata1000000](https://github.com/sata1000000) to fix the the issue in [issues](https://github.com/sata1000000/Vimium-Read/issues).
 
 ## Credits
 - [philc](https://github.com/philc) for the [Vimium](https://github.com/philc/vimium) browser extension that I took the keybindings from.
